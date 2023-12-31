@@ -70,18 +70,42 @@ def spawn_lasers(pos1, pos2):
     laser_rect2 = laser_surf2.get_rect(center=(b, -1600))
     return([laser_surf1,laser_rect1,laser_surf2,laser_rect2])
 
+def switch_sprite(bool):
+    if bool == 0:
+        player_surf = pygame.image.load("Rocket sprites-1.png.png")
+        player_surf = pygame.transform.scale2x(player_surf)
+        bool = 1
+        return player_surf, bool
+    elif bool == 1:
+        player_surf = pygame.image.load("Rocket sprites-2.png.png")
+        player_surf = pygame.transform.scale2x(player_surf)
+        bool = 2
+        return player_surf, bool
+    else:
+        player_surf = pygame.image.load("Rocket sprites-3.png.png")
+        player_surf = pygame.transform.scale2x(player_surf)
+        bool = 0
+        return player_surf, bool
 
 word_font = pygame.font.Font(None, 50)
 char_font = pygame.font.Font("chinese.stsong.ttf", 50)
 pronounced_font = pygame.font.Font(None, 25)
+
 screen = pygame.display.set_mode((400, 800)) #initializes display window
 pygame.display.set_caption("Rocket Chinese")
+
 clock = pygame.time.Clock() #initializes clock object
 word_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(word_timer,5000)
+sprite_timer = pygame.USEREVENT + 2
+pygame.time.set_timer(sprite_timer, 500)
 
-player_surf = pygame.Surface((15, 15))
+#player_surf = pygame.Surface((15, 15))
+player_surf = pygame.image.load("Rocket sprites-1.png.png")
+player_surf = pygame.transform.scale2x(player_surf)
 player_rect = player_surf.get_rect(center = (200,700))
+hitbox_surf = pygame.Surface((15, 15))
+
 
 magic_word = ""
 rand_chars = []
@@ -90,6 +114,7 @@ move_left = False
 move_right = False
 spawned = False
 game_running = False
+bool = 0
 while True:
     for event in pygame.event.get(): #gets all possible events
         if event.type == pygame.QUIT:
@@ -102,7 +127,8 @@ while True:
             if event.key == pygame.K_LEFT:
                 move_left = True
         if event.type == pygame.KEYDOWN:
-            game_running = True
+            if event.key == pygame.K_SPACE:
+                game_running = True
         if event.type == pygame.KEYUP:
             move_left = False
             move_right = False
@@ -112,6 +138,8 @@ while True:
                 lasers = spawn_lasers(x_pos1, x_pos2)
                 #print(rand_chars)
                 #print(magic_word)
+        if event.type == sprite_timer:
+            player_surf, bool = switch_sprite(bool)
 
     screen.fill("Black")
     stars(spawned, star_list)
@@ -119,15 +147,19 @@ while True:
     if game_running == True:
 
         if move_left:
-            if not player_rect.x < 0:
+            if not player_rect.x < -20:
                 player_rect.x -= 4
         if move_right:
-            if not player_rect.x > 385:
+            if not player_rect.x > 365:
                 player_rect.x += 4
 
+        #pygame.draw.rect(screen, "Pink", player_rect)
+        #pygame.draw.polygon(screen, "White", [(player_rect.centerx-25,player_rect.centery+25),(player_rect.centerx,player_rect.centery-25),(player_rect.centerx + 25,player_rect.centery+25)])
         screen.blit(player_surf, player_rect)
-        pygame.draw.rect(screen, "Pink", player_rect)
-        pygame.draw.polygon(screen, "White", [(player_rect.centerx-25,player_rect.centery+25),(player_rect.centerx,player_rect.centery-25),(player_rect.centerx + 25,player_rect.centery+25)])
+        hitbox_rect = hitbox_surf.get_rect(center=(player_rect.center))
+        #screen.blit(hitbox_surf,hitbox_rect)
+        #pygame.draw.rect(screen, "Pink", hitbox_rect)
+
 
         word_surf = word_font.render(magic_word, False, "White")
         word_rect = word_surf.get_rect(center=(200, 400))
@@ -154,14 +186,13 @@ while True:
             pygame.draw.rect(screen, "Red", lasers[3])
             lasers[1].y += 10
             lasers[3].y += 10
-            if lasers[1].colliderect(player_rect) or lasers[3].colliderect(player_rect):
+            if lasers[1].colliderect(hitbox_rect) or lasers[3].colliderect(hitbox_rect):
                  game_running = False
                  lasers[1].x = 1000
                  lasers[3].x = 1000
                  magic_word = None
                  for char in rand_chars[:]:
                      rand_chars.remove(char)
-                 print(rand_chars)
 
     else:
 
@@ -169,13 +200,12 @@ while True:
         title_rect = title_surf.get_rect(center=(200, 50))
         screen.blit(title_surf, title_rect)
 
-        subtext_surf = pronounced_font.render("press any button to start", False, "White")
+        subtext_surf = pronounced_font.render("press SPACE to start", False, "White")
         subtext_rect = subtext_surf.get_rect(center=(200, 100))
         screen.blit(subtext_surf, subtext_rect)
 
-        pygame.draw.polygon(screen, "White", [(player_rect.centerx - 25, player_rect.centery + 25),
-                                              (player_rect.centerx, player_rect.centery - 25),
-                                              (player_rect.centerx + 25, player_rect.centery + 25)])
+        player_rect.centerx = 200
+        screen.blit(player_surf, player_rect)
 
 
 
